@@ -6,21 +6,27 @@ At its core, Pin Sniper is a **hybrid system**. It consists of a local desktop e
 
 ---
 
-## 🗺️ High-Level System Diagram
 
-```mermaid
-sequenceDiagram
-    participant User
-    participant DOM as Active Browser Tab
-    participant Ext as Extension Background
-    participant API as Local Server (:31337)
-    participant Electron as Electron Main Engine
-    
-    User->>DOM: Opens extension & clicks Start
-    DOM->>DOM: Injects scraper.js & extracts media URLs
-    DOM->>Ext: Passes JSON payload
-    Ext->>API: POST [http://127.0.0.1:31337/snipe](http://127.0.0.1:31337/snipe)
-    API->>Electron: Triggers executeSnipe()
-    Electron->>Electron: Handles file streams & rate limiting
-    DOM->>API: GET /status (Polling every 1s)
-    API->>DOM: Returns UI progress updates
+## 🗺️ System Architecture (How it Works)
+
+Pin Sniper uses a lightweight bridge architecture to connect your web browser safely to your desktop filesystem. 
+
+```text
+ ┌──────────────────────────┐
+ │   1. BROWSER COMPANION   │ ➔ Extracts raw high-resolution media 
+ │    (Chrome / Firefox)    │   links right from the active webpage.
+ └─────────────┬────────────┘
+               │
+               │ (Sends data securely over localhost)
+               ▼
+ ┌──────────────────────────┐
+ │   2. LOCAL PORT BRIDGE   │ ➔ Receives payload at [http://127.0.0.1:31337](http://127.0.0.1:31337)
+ │     (Node.js Server)     │   to safely bypass browser security limits.
+ └─────────────┬────────────┘
+               │
+               │ (Hands off links to download engine)
+               ▼
+ ┌──────────────────────────┐
+ │   3. ELECTRON ENGINE     │ ➔ Automatically builds target folders and
+ │    (Desktop App Core)    │   saves image & video streams to hard drive.
+ └──────────────────────────┘
