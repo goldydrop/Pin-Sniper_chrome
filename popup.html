@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<style>
+		body {
+			width: 300px;
+			padding: 15px;
+			font-family: sans-serif;
+			background: #f7f7f7;
+		}
+
+		h2 {
+			color: #e60023;
+			text-align: center;
+			margin-top: 0;
+		}
+
+		.setting-item {
+			display: flex;
+			justify-content: space-between;
+			margin-bottom: 12px;
+			align-items: center;
+			background: white;
+			padding: 10px;
+			border-radius: 8px;
+			box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+		}
+
+		label {
+			font-size: 13px;
+			font-weight: bold;
+			color: #333;
+		}
+
+		.main-btn {
+			width: 100%;
+			padding: 12px;
+			margin-top: 10px;
+			border: none;
+			border-radius: 25px;
+			font-weight: bold;
+			cursor: pointer;
+			transition: transform 0.1s;
+			background: #e60023;
+			color: white;
+		}
+
+			.main-btn:active {
+				transform: scale(0.98);
+			}
+	</style>
+</head>
+<body>
+	<h2>Pin Sniper V3</h2>
+
+	<div class="setting-item">
+		<label for="keepGoing">Keep Scrolling (Infinite)</label>
+		<input type="checkbox" id="keepGoing">
+	</div>
+
+	<div class="setting-item">
+		<label for="fastMode">Fast Mode (No Delays)</label>
+		<input type="checkbox" id="fastMode">
+	</div>
+
+	<button class="main-btn" id="startBtn">DOWNLOAD</button>
+
+	<script src="popup.js"></script>
+</body>
+</html>
