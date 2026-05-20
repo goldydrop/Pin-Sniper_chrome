@@ -1,0 +1,24 @@
+{
+  "manifest_version": 3,
+  "name": "Pinterest Board Downloader",
+  "version": "2.0",
+  "description": "Auto-scrolls and downloads high-res images from Pinterest boards.",
+  "permissions": ["activeTab", "scripting", "downloads"],
+  "host_permissions": ["https://*.pinimg.com/*", "https://*.pinterest.com/*"],
+  "icons": {
+    "16": "icon.png",
+    "48": "icon.png",
+    "128": "icon.png"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icon.png",
+      "48": "icon.png",
+      "128": "icon.png"
+    }
+  },
+  "background": {
+    "service_worker": "background.js"
+  }
+}
