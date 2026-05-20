@@ -24,7 +24,6 @@
     const box = document.createElement('div');
     box.style.cssText = `background: #1e1e1e; color: #fff; width: 380px; padding: 25px; border-radius: 12px; box-shadow: 0 15px 40px rgba(0,0,0,0.5); display: flex; flex-direction: column; gap: 15px; border: 1px solid #333;`;
 
-    // ORIGINAL MENU VIEW
     box.innerHTML = `
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
             <h3 style="margin: 0; color: #e60023; font-size: 18px;">🎯 Save to Pin Sniper</h3>
@@ -60,14 +59,11 @@
     };
 
     const api = globalThis.browser || globalThis.chrome;
-                           
-    // FIX #1: Force browser to always handle scraping locally to bypass Electron background login walls
     const triggerFallback = true; 
 
     document.getElementById('eagle-save-btn').onclick = () => {
         const folderName = document.getElementById('eagle-folder-name').value.trim() || defaultFolder;
         
-        // TRANSITION TO LOADING VIEW
         box.innerHTML = `
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
                 <h3 style="margin: 0; color: #e60023; font-size: 18px;">🎯 Save to Pin Sniper</h3>
@@ -101,27 +97,40 @@
             let localScrapeTimer = setInterval(() => {
                 if (!isScraping) return;
 
-                // --- PRO METHOD: ACCURACY BOUNDARY CHECK (Structural Elements) ---
-                // Scans for Pinterest's invisible developer tags
-                const boundaryElement = document.querySelector(
-                    '[data-test-id="related-pins"], ' + 
-                    '[data-test-id="board-recommendations"], ' + 
-                    '[data-test-id="more-ideas-container"]'
-                );
+                let hitBoundary = false;
 
-                if (boundaryElement) {
+                // 1. Check for structural developer tags (NOW INCLUDES MobileFeed)
+                if (document.querySelector('[data-test-id="related-pins"], [data-test-id="board-recommendations"], [data-test-id="more-ideas-container"], [data-test-id="MobileFeed"]')) {
+                    hitBoundary = true;
+                }
+
+                // 2. Check for visible text in any heading or span tag
+                if (!hitBoundary) {
+                    const textElements = document.querySelectorAll('h1, h2, h3, h4, h5, span, div');
+                    const boundaryPhrases = ["more ideas for this board", "more to explore", "more like this"];
+                    
+                    for (let el of textElements) {
+                        if (el.innerText && el.innerText.length < 40) {
+                            let text = el.innerText.trim().toLowerCase();
+                            if (boundaryPhrases.includes(text)) {
+                                hitBoundary = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                if (hitBoundary) {
                     clearInterval(localScrapeTimer);
                     isScraping = false;
                     title.innerText = "🚧 End of Official Board Detected!";
                     title.style.color = "#00c853";
                     
-                    // Pause for 1 second so the user can read the message, then beam the exact pins
                     setTimeout(() => {
                         sendHybridPayload(Array.from(links), folderName, title, stopBtn, desc);
                     }, 1000);
-                    return; // Stop the loop immediately
+                    return; 
                 }
-                // ----------------------------------------------------------------
 
                 document.querySelectorAll('img[src*="pinimg.com/"]').forEach(img => {
                     let highResSrc = img.src.replace(/\/(?:\d+x|x)\//, '/originals/');
@@ -134,7 +143,6 @@
                 if (!window.sniperKeepGoing) {
                     if (document.body.scrollHeight === lastHeight) {
                         idleCount++;
-                        // FIX #2: Increased from 2 to 5 to give slower hardware/Wi-Fi enough time
                         if (idleCount > 5) { 
                             clearInterval(localScrapeTimer);
                             isScraping = false;
@@ -162,7 +170,6 @@
                     setTimeout(() => overlay.remove(), 1000);
                 }
             };
-
         }
     };
 
