@@ -60,12 +60,6 @@
     };
 
     const api = globalThis.browser || globalThis.chrome;
-
-    const isHomeFeed = window.location.pathname === '/' || window.location.pathname.startsWith('/home');
-    const pageHTML = document.documentElement.innerHTML.toLowerCase();
-    const isPrivateBoard = pageHTML.includes('"privacy":"secret"') || 
-                           pageHTML.includes('"is_secret_board":true') || 
-                           document.querySelector('[aria-label*="Secret"]') !== null;
                            
     // FIX #1: Force browser to always handle scraping locally to bypass Electron background login walls
     const triggerFallback = true; 
@@ -73,7 +67,7 @@
     document.getElementById('eagle-save-btn').onclick = () => {
         const folderName = document.getElementById('eagle-folder-name').value.trim() || defaultFolder;
         
-        // TRANSITION TO LOADING VIEW (Now safely keeps the header and X button!)
+        // TRANSITION TO LOADING VIEW
         box.innerHTML = `
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
                 <h3 style="margin: 0; color: #e60023; font-size: 18px;">🎯 Save to Pin Sniper</h3>
@@ -87,7 +81,6 @@
             </div>
         `;
         
-        // Re-attach the close action for the new X button!
         document.getElementById('eagle-close-status').onclick = () => overlay.remove();
         document.getElementById('eagle-close-status').onmouseover = function() { this.style.color = 'white'; };
         document.getElementById('eagle-close-status').onmouseout = function() { this.style.color = '#888'; };
@@ -108,6 +101,28 @@
             let localScrapeTimer = setInterval(() => {
                 if (!isScraping) return;
 
+                // --- PRO METHOD: ACCURACY BOUNDARY CHECK (Structural Elements) ---
+                // Scans for Pinterest's invisible developer tags
+                const boundaryElement = document.querySelector(
+                    '[data-test-id="related-pins"], ' + 
+                    '[data-test-id="board-recommendations"], ' + 
+                    '[data-test-id="more-ideas-container"]'
+                );
+
+                if (boundaryElement) {
+                    clearInterval(localScrapeTimer);
+                    isScraping = false;
+                    title.innerText = "🚧 End of Official Board Detected!";
+                    title.style.color = "#00c853";
+                    
+                    // Pause for 1 second so the user can read the message, then beam the exact pins
+                    setTimeout(() => {
+                        sendHybridPayload(Array.from(links), folderName, title, stopBtn, desc);
+                    }, 1000);
+                    return; // Stop the loop immediately
+                }
+                // ----------------------------------------------------------------
+
                 document.querySelectorAll('img[src*="pinimg.com/"]').forEach(img => {
                     let highResSrc = img.src.replace(/\/(?:\d+x|x)\//, '/originals/');
                     if (highResSrc.includes('/originals/')) links.add(highResSrc);
@@ -119,7 +134,7 @@
                 if (!window.sniperKeepGoing) {
                     if (document.body.scrollHeight === lastHeight) {
                         idleCount++;
-                        // FIX #2: Increased from 2 to 5 to give slower hardware/Wi-Fi enough time to load more content before giving up
+                        // FIX #2: Increased from 2 to 5 to give slower hardware/Wi-Fi enough time
                         if (idleCount > 5) { 
                             clearInterval(localScrapeTimer);
                             isScraping = false;
@@ -148,33 +163,6 @@
                 }
             };
 
-        } else {
-            api.runtime.sendMessage({
-                action: "sendToElectron",
-                payload: {
-                    url: window.location.href,
-                    keepGoing: window.sniperKeepGoing || false, 
-                    fastMode: window.sniperFastMode || false,
-                    customName: folderName
-                }
-            }).then((response) => {
-                if (!response || !response.success) {
-                    triggerConnectionError(title, stopBtn, desc);
-                } else {
-                    startStatusPolling(title, stopBtn);
-                }
-            }).catch(() => {
-                triggerConnectionError(title, stopBtn, desc);
-            });
-
-            stopBtn.onclick = () => {
-                if (isStopping) return;
-                isStopping = true;
-                stopBtn.innerText = "Sending Signal... ⏳";
-                api.runtime.sendMessage({ action: "stopElectron" }).then(() => {
-                    isStopping = false; 
-                }).catch(() => { isStopping = false; });
-            };
         }
     };
 
@@ -187,6 +175,7 @@
 
     function sendHybridPayload(directLinks, customName, titleElement, stopBtnElement, descElement) {
         titleElement.innerText = "🚀 Beam to Background App...";
+        const api = globalThis.browser || globalThis.chrome;
         api.runtime.sendMessage({
             action: "sendToElectron",
             payload: {
@@ -208,6 +197,7 @@
 
     function startStatusPolling(titleElement, stopBtnElement) {
         let isStopping = false;
+        const api = globalThis.browser || globalThis.chrome;
         let pollInterval = setInterval(() => {
             api.runtime.sendMessage({ action: "getStatus" }).then((res) => {
                 if (res && res.success && res.state) {
