@@ -67,7 +67,8 @@
                            pageHTML.includes('"is_secret_board":true') || 
                            document.querySelector('[aria-label*="Secret"]') !== null;
                            
-    const triggerFallback = isHomeFeed || isPrivateBoard;
+    // FIX #1: Force browser to always handle scraping locally to bypass Electron background login walls
+    const triggerFallback = true; 
 
     document.getElementById('eagle-save-btn').onclick = () => {
         const folderName = document.getElementById('eagle-folder-name').value.trim() || defaultFolder;
@@ -118,7 +119,8 @@
                 if (!window.sniperKeepGoing) {
                     if (document.body.scrollHeight === lastHeight) {
                         idleCount++;
-                        if (idleCount > 2) { 
+                        // FIX #2: Increased from 2 to 5 to give slower hardware/Wi-Fi enough time to load more content before giving up
+                        if (idleCount > 5) { 
                             clearInterval(localScrapeTimer);
                             isScraping = false;
                             sendHybridPayload(Array.from(links), folderName, title, stopBtn, desc);
