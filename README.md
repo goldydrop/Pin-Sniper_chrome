@@ -1,3 +1,5 @@
+# OUTDATED!! DO NOT USE!!
+
 # 🧩 Pin Sniper (Chrome Extension)
 **The official browser companion for the Pin Sniper desktop application.**
 
