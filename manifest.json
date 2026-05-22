@@ -5,9 +5,7 @@
 	"description": "Downloads boards, Images, GIFs, & Videos from Pinterest.",
 	"permissions": [
 		"activeTab",
-		"scripting",
-		"downloads",
-		"declarativeNetRequest"
+		"scripting"
 	],
 	"host_permissions": [
 		"*://*.pinimg.com/*",
@@ -30,19 +28,10 @@
 	"background": {
 		"service_worker": "background.js"
 	},
-	"declarative_net_request": {
-		"rule_resources": [
-			{
-				"id": "cors_bypass",
-				"enabled": true,
-				"path": "rules.json"
-			}
-		]
-	},
 	"content_scripts": [
 		{
 			"matches": [ "*://*.pinterest.com/*" ],
-			"js": [ "hls.min.js" ]
+			"js": [ "scraper.js" ]
 		}
 	]
 }
